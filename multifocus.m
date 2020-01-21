@@ -192,7 +192,7 @@ image2_sharp=imfilter(image2,h,'symmetric');
 [m,n] = size(image1);
 FusedDCTSharp = zeros(m,n);
 FusedDCTSharp_CV = zeros(m,n);
-Map = zeros(floor(m/8),floor(n/8));	% cv i�in
+Map = zeros(floor(m/8),floor(n/8));	% for CV
 %**************************************************
 
 % Level shifting for DCT
@@ -943,8 +943,8 @@ figure, imshow(FusedDCT), title('"DCT+SVD" fusion result');
 
 %DCT+SVD+CV    
     case 'DCT+SVD+CV'
-%uyar�
-uiwait(msgbox('Bu i�lem biraz zaman alabilir.','Uyar�!','modal')); 
+% Warning
+uiwait(msgbox('This process may take some time, please do not close this window.','Warning!','modal')); 
         
 %**************************************************
 global image1
