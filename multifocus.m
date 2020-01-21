@@ -29,11 +29,11 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 disp('Choose the first image:')
 [filename, pathname]= uigetfile({'*.jpg;*.png;*.tif'},'Choose the first image');
 path=fullfile(pathname, filename);
-global resim1
-resim1=imread(path);
+global image1
+image1=imread(path);
 disp('The first image is succesfully selected')
 axes(handles.axes1);
-imshow(resim1);
+imshow(image1);
 
 % --- Executes on button press in pushbutton2.
 function pushbutton2_Callback(hObject, eventdata, handles)
@@ -43,22 +43,22 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 disp('Choose the second image:')
 [filename, pathname]= uigetfile({'*.jpg;*.png;*.tif'},'Choose the second image');
 path=fullfile(pathname, filename);
-global resim1
-global resim2
-resim2=imread(path);
+global image1
+global image2
+image2=imread(path);
 disp('The second image is succesfully selected')
 
 
 axes(handles.axes2);
-imshow(resim2);
-if size(resim1,3) == 3 %Does the image have 3 channel?
-    resim1 = rgb2gray(resim1);
+imshow(image2);
+if size(image1,3) == 3 %Does the image have 3 channel?
+    image1 = rgb2gray(image1);
 end
-if size(resim2,3) == 3
-    resim2 = rgb2gray(resim2);
+if size(image2,3) == 3
+    image2 = rgb2gray(image2);
 end
 
-if size(resim1) ~= size(resim2)	%Are the images' size same?
+if size(image1) ~= size(image2)	%Are the images' size same?
     disp('Images have different sizes!')
 end
 
@@ -73,21 +73,21 @@ switch popChoice
     case 'DCT+VARIANCE'
     uiwait(msgbox('This process may take some time, please do not close this window.','Warning','modal'));
     
-    global resim1
-    global resim2
+    global image1
+    global image2
 
  
 
 %Unsharp Filter
 %**************************************************
 h = fspecial('unsharp');                                                                                                                                                                                                                                       
-resim1_sharp=imfilter(resim1,h,'symmetric');
-resim2_sharp=imfilter(resim2,h,'symmetric');
+image1_sharp=imfilter(image1,h,'symmetric');
+image2_sharp=imfilter(image2,h,'symmetric');
 %**************************************************
 
 % Specify the image's size
 %**************************************************
-[m,n] = size(resim1);
+[m,n] = size(image1);
 FusedDCTSharp = zeros(m,n);
 FusedDCTSharp_CV = zeros(m,n);
 Map = zeros(floor(m/8),floor(n/8));	% for CV
@@ -95,61 +95,61 @@ Map = zeros(floor(m/8),floor(n/8));	% for CV
 
 % Level shifting for DCT
 %**************************************************
-resim1 = double(resim1)-128;
-resim2 = double(resim2)-128;
-resim1_sharp = double(resim1_sharp)-128;
-resim2_sharp = double(resim2_sharp)-128;
+image1 = double(image1)-128;
+image2 = double(image2)-128;
+image1_sharp = double(image1_sharp)-128;
+image2_sharp = double(image2_sharp)-128;
 %**************************************************
 
 % Dividing the image into 8*8 pieces
 for i = 1:floor(m/8)
     for j = 1:floor(n/8)
         
-        resim1s = resim1(8*i-7:8*i,8*j-7:8*j);
-        resim2s = resim2(8*i-7:8*i,8*j-7:8*j);
-        resim1Sub = resim1_sharp(8*i-7:8*i,8*j-7:8*j);
-        resim2Sub = resim2_sharp(8*i-7:8*i,8*j-7:8*j);
+        image1s = image1(8*i-7:8*i,8*j-7:8*j);
+        image2s = image2(8*i-7:8*i,8*j-7:8*j);
+        image1Sub = image1_sharp(8*i-7:8*i,8*j-7:8*j);
+        image2Sub = image2_sharp(8*i-7:8*i,8*j-7:8*j);
         
         % DCT
 %**************************************************
-        resim1sdct = dct2(resim1s);
-        resim2sdct = dct2(resim2s);
-        resim1SubDct = dct2(resim1Sub);
-        resim2SubDct = dct2(resim2Sub);
+        image1sdct = dct2(image1s);
+        image2sdct = dct2(image2s);
+        image1SubDct = dct2(image1Sub);
+        image2SubDct = dct2(image2Sub);
 %**************************************************
         
         %NTC
 %**************************************************
-        resim1Norm = resim1SubDct ./ 8;
-        resim2Norm = resim2SubDct ./ 8;
+        image1Norm = image1SubDct ./ 8;
+        image2Norm = image2SubDct ./ 8;
 %**************************************************
         
         % Mean
 %**************************************************
-        resim1Mean = resim1Norm(1,1);
-        resim2Mean = resim2Norm(1,1);
+        image1Mean = image1Norm(1,1);
+        image2Mean = image2Norm(1,1);
 %**************************************************
         
         % Variance
 %**************************************************
-        resim1Var = sum(sum(resim1Norm.^2)) - resim1Mean.^2;
-        resim2Var = sum(sum(resim2Norm.^2)) - resim2Mean.^2;
+        image1Var = sum(sum(image1Norm.^2)) - image1Mean.^2;
+        image2Var = sum(sum(image2Norm.^2)) - image2Mean.^2;
 %**************************************************
         
 
          t=60;
-        if resim1Var > (resim2Var+t)
-            dctSub = resim1sdct;
+        if image1Var > (image2Var+t)
+            dctSub = image1sdct;
             
        
         end
-        if resim1Var < (resim2Var-t)
-            dctSub = resim2sdct;
+        if image1Var < (image2Var-t)
+            dctSub = image2sdct;
         end
 % 
-        if resim1Var < (resim2Var+t)&& resim1Var > (resim2Var-t)
+        if image1Var < (image2Var+t)&& image1Var > (image2Var-t)
             
-            dctSub = (resim1sdct+resim2sdct)./2;
+            dctSub = (image1sdct+image2sdct)./2;
 
         end
         
@@ -164,8 +164,8 @@ end
     
 % inverse shift 
 %**************************************************
-resim1 = uint8(double(resim1)+128);
-resim2 = uint8(double(resim2)+128);
+image1 = uint8(double(image1)+128);
+image2 = uint8(double(image2)+128);
 FusedDCTSharp = uint8(double(FusedDCTSharp)+128);
 %**************************************************
 
@@ -177,83 +177,83 @@ figure, imshow(FusedDCTSharp), title('DCT+VARIANCE');
 
  uiwait(msgbox('This process may take some time, please do not close this window.','Warning','modal'));
     
-    global resim1
-    global resim2
+    global image1
+    global image2
 
 %Unsharp Filter
 %**************************************************
 h = fspecial('unsharp');                                                                                                                                                                                                                                       
-resim1_sharp=imfilter(resim1,h,'symmetric');
-resim2_sharp=imfilter(resim2,h,'symmetric');
+image1_sharp=imfilter(image1,h,'symmetric');
+image2_sharp=imfilter(image2,h,'symmetric');
 %**************************************************
 
 % Specify the image's size
 %**************************************************
-[m,n] = size(resim1);
+[m,n] = size(image1);
 FusedDCTSharp = zeros(m,n);
 FusedDCTSharp_CV = zeros(m,n);
-Map = zeros(floor(m/8),floor(n/8));	% cv için
+Map = zeros(floor(m/8),floor(n/8));	% cv iï¿½in
 %**************************************************
 
 % Level shifting for DCT
 %**************************************************
-resim1 = double(resim1)-128;
-resim2 = double(resim2)-128;
-resim1_sharp = double(resim1_sharp)-128;
-resim2_sharp = double(resim2_sharp)-128;
+image1 = double(image1)-128;
+image2 = double(image2)-128;
+image1_sharp = double(image1_sharp)-128;
+image2_sharp = double(image2_sharp)-128;
 %**************************************************
 
 % Dividing the image into 8*8 pieces
 for i = 1:floor(m/8)
     for j = 1:floor(n/8)
         
-       resim1s = resim1(8*i-7:8*i,8*j-7:8*j);
-        resim2s = resim2(8*i-7:8*i,8*j-7:8*j);
-        resim1Sub = resim1_sharp(8*i-7:8*i,8*j-7:8*j);
-        resim2Sub = resim2_sharp(8*i-7:8*i,8*j-7:8*j);
+       image1s = image1(8*i-7:8*i,8*j-7:8*j);
+        image2s = image2(8*i-7:8*i,8*j-7:8*j);
+        image1Sub = image1_sharp(8*i-7:8*i,8*j-7:8*j);
+        image2Sub = image2_sharp(8*i-7:8*i,8*j-7:8*j);
         
         
         % DCT
         %**************************************************
-        resim1sdct = dct2(resim1s);
-        resim2sdct = dct2(resim2s);
-        resim1SubDct = dct2(resim1Sub);
-        resim2SubDct = dct2(resim2Sub);
+        image1sdct = dct2(image1s);
+        image2sdct = dct2(image2s);
+        image1SubDct = dct2(image1Sub);
+        image2SubDct = dct2(image2Sub);
         %**************************************************
         
         % NTC 
         %**************************************************
-        resim1Norm = resim1SubDct ./ 8;
-        resim2Norm = resim2SubDct ./ 8;
+        image1Norm = image1SubDct ./ 8;
+        image2Norm = image2SubDct ./ 8;
         %**************************************************
         
         % Mean 
         %**************************************************
-        resim1Mean = resim1Norm(1,1);
-        resim2Mean = resim2Norm(1,1);
+        image1Mean = image1Norm(1,1);
+        image2Mean = image2Norm(1,1);
         %**************************************************
         
         % Variance
         %**************************************************
-        resim1Var = sum(sum(resim1Norm.^2)) - resim1Mean.^2;
-        resim2Var = sum(sum(resim2Norm.^2)) - resim2Mean.^2;
+        image1Var = sum(sum(image1Norm.^2)) - image1Mean.^2;
+        image2Var = sum(sum(image2Norm.^2)) - image2Mean.^2;
         %**************************************************
         
 
           t=60;
-        if resim1Var > (resim2Var+t)
-            dctSub = resim1sdct;
+        if image1Var > (image2Var+t)
+            dctSub = image1sdct;
             Map(i,j) =-1;	% CV 
        
         end
-        if  resim1Var < (resim2Var-t)
-            dctSub = resim2sdct;
+        if  image1Var < (image2Var-t)
+            dctSub = image2sdct;
             Map(i,j) = +1;    % CV
         end
  
-        if resim1Var < (resim2Var+t)&& resim1Var > (resim2Var-t)
+        if image1Var < (image2Var+t)&& image1Var > (image2Var-t)
             Map(i,j)=0;
-         dctSub = (resim1sdct+resim2sdct)./2;
+         dctSub = (image1sdct+image2sdct)./2;
 
         end
         
@@ -274,7 +274,7 @@ for i = 1:m/8
        
 
        
-     FusedDCTSharp_CV(8*i-7:8*i,8*j-7:8*j) =(((1-cvMapFiltered(i,j))/2)*resim1(8*i-7:8*i,8*j-7:8*j))+(((1+cvMapFiltered(i,j))/2)*resim2(8*i-7:8*i,8*j-7:8*j));
+     FusedDCTSharp_CV(8*i-7:8*i,8*j-7:8*j) =(((1-cvMapFiltered(i,j))/2)*image1(8*i-7:8*i,8*j-7:8*j))+(((1+cvMapFiltered(i,j))/2)*image2(8*i-7:8*i,8*j-7:8*j));
 
 
    
@@ -285,11 +285,11 @@ for i = 1:m/8
     for j = 1:n/8
         % DCT+Variance+CV method
         if cvMapFiltered(i,j) < -0.06
-            FusedDCTSharp_CV(8*i-7:8*i,8*j-7:8*j) = resim1(8*i-7:8*i,8*j-7:8*j);
+            FusedDCTSharp_CV(8*i-7:8*i,8*j-7:8*j) = image1(8*i-7:8*i,8*j-7:8*j);
 
         end
         if cvMapFiltered(i,j) > 0.06
-            FusedDCTSharp_CV(8*i-7:8*i,8*j-7:8*j) = resim2(8*i-7:8*i,8*j-7:8*j);
+            FusedDCTSharp_CV(8*i-7:8*i,8*j-7:8*j) = image2(8*i-7:8*i,8*j-7:8*j);
        
         end
         
@@ -299,8 +299,8 @@ end
     
 % inverse shift 
 %**************************************************
-resim1 = uint8(double(resim1)+128);
-resim2 = uint8(double(resim2)+128);
+image1 = uint8(double(image1)+128);
+image2 = uint8(double(image2)+128);
 %**************************************************
 
 FusedDCTSharp_CV = uint8(double(FusedDCTSharp_CV)+128);
@@ -308,8 +308,8 @@ figure, imshow(FusedDCTSharp_CV), title('DCT+VARINACE+CV');
 
 
     case 'DCT+CORR'
-     global resim1
-     global resim2
+     global image1
+     global image2
 
     uiwait(msgbox('This process may take some time, please do not close this window.','Warning','modal'));
     
@@ -319,13 +319,13 @@ figure, imshow(FusedDCTSharp_CV), title('DCT+VARINACE+CV');
 % low pass
 
 %**********************************************************
-resim1low=imfilter(resim1,fspecial('average',5),'symmetric');
-resim2low=imfilter(resim2,fspecial('average',5),'symmetric');
+image1low=imfilter(image1,fspecial('average',5),'symmetric');
+image2low=imfilter(image2,fspecial('average',5),'symmetric');
 %**********************************************************
 
 % Get the image's size
 
-[m,n] = size(resim1);
+[m,n] = size(image1);
 
 % Two new images that contain zeros
 
@@ -335,66 +335,66 @@ Map = zeros(floor(m/8),floor(n/8));	%for CV
 
 % Level shifting
 %**************************************************
-resim1 = double(resim1)-128;
-resim2 = double(resim2)-128;
-resim1low = double(resim1low)-128;
-resim2low = double(resim2low)-128;
+image1 = double(image1)-128;
+image2 = double(image2)-128;
+image1low = double(image1low)-128;
+image2low = double(image2low)-128;
 %**************************************************
 
 
 for i = 1:floor(m/8)
     for j = 1:floor(n/8)
         
-        resim1_Blok = resim1(8*i-7:8*i,8*j-7:8*j);
-        resim2_Blok = resim2(8*i-7:8*i,8*j-7:8*j);
-        resim1_Blok_Blurred = resim1low(8*i-7:8*i,8*j-7:8*j);
-        resim2_Blok_Blurred = resim2low(8*i-7:8*i,8*j-7:8*j);
+        image1_Block = image1(8*i-7:8*i,8*j-7:8*j);
+        image2_Block = image2(8*i-7:8*i,8*j-7:8*j);
+        image1_Block_Blurred = image1low(8*i-7:8*i,8*j-7:8*j);
+        image2_Block_Blurred = image2low(8*i-7:8*i,8*j-7:8*j);
         
         % DCT 
-        resim1_Blok_DCT = dct2(resim1_Blok);
-        resim2_Blok_DCT = dct2(resim2_Blok);
-        resim1_Blok_Blurred_DCT = dct2(resim1_Blok_Blurred);
-        resim2_Blok_Blurred_DCT = dct2(resim2_Blok_Blurred);
+        image1_Block_DCT = dct2(image1_Block);
+        image2_Block_DCT = dct2(image2_Block);
+        image1_Block_Blurred_DCT = dct2(image1_Block_Blurred);
+        image2_Block_Blurred_DCT = dct2(image2_Block_Blurred);
         
         % NTC
-        resim1Norm = resim1_Blok_DCT ./ 8;
-        resim2Norm = resim2_Blok_DCT ./ 8;
-        resim1Normlow = resim1_Blok_Blurred_DCT ./ 8;
-        resim2Normlow = resim2_Blok_Blurred_DCT ./ 8;
+        image1Norm = image1_Block_DCT ./ 8;
+        image2Norm = image2_Block_DCT ./ 8;
+        image1Normlow = image1_Block_Blurred_DCT ./ 8;
+        image2Normlow = image2_Block_Blurred_DCT ./ 8;
         
         % Mean 
-        resim1ave = mean(mean(resim1Norm));
-        resim2ave = mean(mean(resim2Norm));
-        resim1avelow =  mean(mean(resim1Normlow));
-        resim2avelow = mean(mean(resim2Normlow));
+        image1ave = mean(mean(image1Norm));
+        image2ave = mean(mean(image2Norm));
+        image1avelow =  mean(mean(image1Normlow));
+        image2avelow = mean(mean(image2Normlow));
 
 % CC     
 %**************************************************
-a = resim1_Blok_DCT - resim1ave;
-b = resim1_Blok_Blurred_DCT - resim1avelow;
-resim1cor = sum(sum(a.*b))/sqrt(sum(sum(a.*a))*sum(sum(b.*b)));
+a = image1_Block_DCT - image1ave;
+b = image1_Block_Blurred_DCT - image1avelow;
+image1cor = sum(sum(a.*b))/sqrt(sum(sum(a.*a))*sum(sum(b.*b)));
 %**************************************************
 
 % CC  
 %**************************************************
-a = resim2_Blok_DCT - resim2ave;
-b = resim2_Blok_Blurred_DCT - resim2avelow;
-resim2cor = sum(sum(a.*b))/sqrt(sum(sum(a.*a))*sum(sum(b.*b)));
+a = image2_Block_DCT - image2ave;
+b = image2_Block_Blurred_DCT - image2avelow;
+image2cor = sum(sum(a.*b))/sqrt(sum(sum(a.*a))*sum(sum(b.*b)));
 %**************************************************
 
  % Fusion 
-        if resim1cor > resim2cor
-            dctCorrBlok = resim2_Blok_DCT;
+        if image1cor > image2cor
+            dctCorrBlock = image2_Block_DCT;
              
         end
-        if resim1cor <= resim2cor
-            dctCorrBlok = resim1_Blok_DCT;
+        if image1cor <= image2cor
+            dctCorrBlock = image1_Block_DCT;
             
         end
         
         % Inverse DCT 
         % DCT+Corr Method
-        FusedDCTCorr(8*i-7:8*i,8*j-7:8*j) = idct2(dctCorrBlok);
+        FusedDCTCorr(8*i-7:8*i,8*j-7:8*j) = idct2(dctCorrBlock);
         
     end
 end
@@ -402,26 +402,26 @@ end
 
 % Inverse level shifting 
 %**************************************************
-resim1 = uint8(double(resim1)+128);
-resim2 = uint8(double(resim2)+128);
+image1 = uint8(double(image1)+128);
+image2 = uint8(double(image2)+128);
 %**************************************************
 FusedDCTCorr = uint8(double(FusedDCTCorr)+128);
 figure, imshow(FusedDCTCorr), title('"DCT+Corr"');
 
   
 case 'DCT+CORR+CV'
-     global resim1
-     global resim2
+     global image1
+     global image2
  uiwait(msgbox('This process may take some time, please do not close this window.','Warning','modal'));
 
    
 %**************************************************     
-resim1low=imfilter(resim1,fspecial('average',5),'symmetric');
-resim2low=imfilter(resim2,fspecial('average',5),'symmetric');
+image1low=imfilter(image1,fspecial('average',5),'symmetric');
+image2low=imfilter(image2,fspecial('average',5),'symmetric');
 %**************************************************
 
 % Sizes
-[m,n] = size(resim1);
+[m,n] = size(image1);
 % Two new images that contain zeros
 FusedDCTCorr = zeros(m,n);
 FusedDCTCorr_CV = zeros(m,n);
@@ -429,72 +429,72 @@ Map = zeros(floor(m/8),floor(n/8));
 
 % Level shifting
 %**************************************************
-resim1 = double(resim1)-128;
-resim2 = double(resim2)-128;
-resim1low = double(resim1low)-128;
-resim2low = double(resim2low)-128;
+image1 = double(image1)-128;
+image2 = double(image2)-128;
+image1low = double(image1low)-128;
+image2low = double(image2low)-128;
 %**************************************************
 
 %  8*8 
 for i = 1:floor(m/8)
     for j = 1:floor(n/8)
         
-        resim1_Blok = resim1(8*i-7:8*i,8*j-7:8*j);
-        resim2_Blok = resim2(8*i-7:8*i,8*j-7:8*j);
-        resim1_Blok_Blurred = resim1low(8*i-7:8*i,8*j-7:8*j);
-        resim2_Blok_Blurred = resim2low(8*i-7:8*i,8*j-7:8*j);
+        image1_Block = image1(8*i-7:8*i,8*j-7:8*j);
+        image2_Block = image2(8*i-7:8*i,8*j-7:8*j);
+        image1_Block_Blurred = image1low(8*i-7:8*i,8*j-7:8*j);
+        image2_Block_Blurred = image2low(8*i-7:8*i,8*j-7:8*j);
         
         % DCT
         %**************************************************
-        resim1_Blok_DCT = dct2(resim1_Blok);
-        resim2_Blok_DCT = dct2(resim2_Blok);
-        resim1_Blok_Blurred_DCT = dct2(resim1_Blok_Blurred);
-        resim2_Blok_Blurred_DCT = dct2(resim2_Blok_Blurred);
+        image1_Block_DCT = dct2(image1_Block);
+        image2_Block_DCT = dct2(image2_Block);
+        image1_Block_Blurred_DCT = dct2(image1_Block_Blurred);
+        image2_Block_Blurred_DCT = dct2(image2_Block_Blurred);
         %**************************************************
         
         % NTC
         %**************************************************
-        resim1Norm = resim1_Blok_DCT ./ 8;
-        resim2Norm = resim2_Blok_DCT ./ 8;
-        resim1Normlow = resim1_Blok_Blurred_DCT ./ 8;
-        resim2Normlow = resim2_Blok_Blurred_DCT ./ 8;
+        image1Norm = image1_Block_DCT ./ 8;
+        image2Norm = image2_Block_DCT ./ 8;
+        image1Normlow = image1_Block_Blurred_DCT ./ 8;
+        image2Normlow = image2_Block_Blurred_DCT ./ 8;
         %**************************************************
         
         % Mean 
         %**************************************************
-        resim1ave = mean(mean(resim1Norm));
-        resim2ave = mean(mean(resim2Norm));
-        resim1avelow =  mean(mean(resim1Normlow));
-        resim2avelow = mean(mean(resim2Normlow));
+        image1ave = mean(mean(image1Norm));
+        image2ave = mean(mean(image2Norm));
+        image1avelow =  mean(mean(image1Normlow));
+        image2avelow = mean(mean(image2Normlow));
         %**************************************************
 
 %CC
 %**************************************************
-a = resim1_Blok_DCT - resim1ave;
-b = resim1_Blok_Blurred_DCT - resim1avelow;
-resim1cor = sum(sum(a.*b))/sqrt(sum(sum(a.*a))*sum(sum(b.*b)));
+a = image1_Block_DCT - image1ave;
+b = image1_Block_Blurred_DCT - image1avelow;
+image1cor = sum(sum(a.*b))/sqrt(sum(sum(a.*a))*sum(sum(b.*b)));
 %**************************************************
 
 %CC   
 %**************************************************
-a = resim2_Blok_DCT - resim2ave;
-b = resim2_Blok_Blurred_DCT - resim2avelow;
-resim2cor = sum(sum(a.*b))/sqrt(sum(sum(a.*a))*sum(sum(b.*b)));
+a = image2_Block_DCT - image2ave;
+b = image2_Block_Blurred_DCT - image2avelow;
+image2cor = sum(sum(a.*b))/sqrt(sum(sum(a.*a))*sum(sum(b.*b)));
 %**************************************************
 
  % Fusion 
-        if resim1cor > resim2cor
-            dctCorrBlok = resim2_Blok_DCT;
+        if image1cor > image2cor
+            dctCorrBlock = image2_Block_DCT;
             Map(i,j) =+1;	%CV
         end
-        if resim1cor <= resim2cor
-            dctCorrBlok = resim1_Blok_DCT;
+        if image1cor <= image2cor
+            dctCorrBlock = image1_Block_DCT;
             Map(i,j) = -1;    % CV
         end
         
         % Inverse DCT
         % DCT+Corr 
-        FusedDCTCorr(8*i-7:8*i,8*j-7:8*j) = idct2(dctCorrBlok);
+        FusedDCTCorr(8*i-7:8*i,8*j-7:8*j) = idct2(dctCorrBlock);
         
     end
 end
@@ -511,9 +511,9 @@ for i = 1:m/8
     for j = 1:n/8
         
         if Map_Filtered(i,j) < 0
-            FusedDCTCorr_CV(8*i-7:8*i,8*j-7:8*j) = resim1(8*i-7:8*i,8*j-7:8*j);
+            FusedDCTCorr_CV(8*i-7:8*i,8*j-7:8*j) = image1(8*i-7:8*i,8*j-7:8*j);
         else
-            FusedDCTCorr_CV(8*i-7:8*i,8*j-7:8*j) = resim2(8*i-7:8*i,8*j-7:8*j);
+            FusedDCTCorr_CV(8*i-7:8*i,8*j-7:8*j) = image2(8*i-7:8*i,8*j-7:8*j);
         end
         
     end
@@ -521,8 +521,8 @@ end
 
 % inverse shifting 
 %**************************************************
-resim1 = uint8(double(resim1)+128);
-resim2 = uint8(double(resim2)+128);
+image1 = uint8(double(image1)+128);
+image2 = uint8(double(image2)+128);
 %**************************************************
 
 FusedDCTCorr_CV = uint8(double(FusedDCTCorr_CV)+128);
@@ -532,19 +532,19 @@ figure, imshow(FusedDCTCorr_CV), title('"DCT+Corr+CV" ');
      
 
      case 'DCT+CORR_ENG'
-        global resim1
-    global resim2
+        global image1
+    global image2
     uiwait(msgbox('This process may take some time, please do not close this window.','Warning','modal')); 
 
 
-[m,n] = size(resim1);
+[m,n] = size(image1);
 FusedDCT = zeros(m,n);
 FusedDCT_CV = zeros(m,n);
 Map = zeros(floor(m/8),floor(n/8));	
 
 
-resim1 = double(resim1)-128;
-resim2 = double(resim2)-128;
+image1 = double(image1)-128;
+image2 = double(image2)-128;
 
 x=0.0751;
 y=0.1238;
@@ -628,28 +628,28 @@ threshold1=0;
 for i = 1:floor(m/8)
     for j = 1:floor(n/8)
         
-        resim1_Blok  = resim1(8*i-7:8*i,8*j-7:8*j);
-        resim2_Blok  = resim2(8*i-7:8*i,8*j-7:8*j);
+        image1_Block  = image1(8*i-7:8*i,8*j-7:8*j);
+        image2_Block  = image2(8*i-7:8*i,8*j-7:8*j);
         
-        % Compute the 2-D DCT of 8*8 Bloks
-        resim1_Blok_DCT = C*resim1_Blok*C';
-        resim2_Blok_DCT = C*resim2_Blok*C';
+        % Compute the 2-D DCT of 8*8 Blocks
+        image1_Block_DCT = C*image1_Block*C';
+        image2_Block_DCT = C*image2_Block*C';
         
-        resim1SubDct_LOW=(LU*resim1_Blok_DCT*T)+(resim1_Blok_DCT*S)+((Q*resim1_Blok_DCT*U)+(V*resim1_Blok_DCT*Q)+(Q*resim1_Blok_DCT*V));
-        resim2SubDct_LOW=(LU*resim2_Blok_DCT*T)+(resim2_Blok_DCT*S)+((Q*resim2_Blok_DCT*U)+(V*resim2_Blok_DCT*Q)+(Q*resim2_Blok_DCT*V));
+        image1SubDct_LOW=(LU*image1_Block_DCT*T)+(image1_Block_DCT*S)+((Q*image1_Block_DCT*U)+(V*image1_Block_DCT*Q)+(Q*image1_Block_DCT*V));
+        image2SubDct_LOW=(LU*image2_Block_DCT*T)+(image2_Block_DCT*S)+((Q*image2_Block_DCT*U)+(V*image2_Block_DCT*Q)+(Q*image2_Block_DCT*V));
 
-        PimA=resim1_Blok_DCT-mean2(resim1_Blok_DCT);
-        PimB=resim2_Blok_DCT-mean2(resim2_Blok_DCT);
-        PimA_Low=resim1SubDct_LOW-mean2(resim1SubDct_LOW);
-        PimB_Low=resim2SubDct_LOW-mean2(resim2SubDct_LOW);
+        PimA=image1_Block_DCT-mean2(image1_Block_DCT);
+        PimB=image2_Block_DCT-mean2(image2_Block_DCT);
+        PimA_Low=image1SubDct_LOW-mean2(image1SubDct_LOW);
+        PimB_Low=image2SubDct_LOW-mean2(image2SubDct_LOW);
         
         cor1= sum(sum(PimA.*PimA_Low))/sqrt(sum(sum(PimA.*PimA))*sum(sum(PimA_Low.*PimA_Low)));
         cor2= sum(sum(PimB.*PimB_Low))/sqrt(sum(sum(PimB.*PimB))*sum(sum(PimB_Low.*PimB_Low)));
        
-        energy_A=sum(sum(resim1_Blok_DCT.^2));
-        energy_B=sum(sum(resim2_Blok_DCT.^2));
-        energy_A_Low=sum(sum(resim1SubDct_LOW.^2));
-        energy_B_Low=sum(sum(resim2SubDct_LOW.^2));
+        energy_A=sum(sum(image1_Block_DCT.^2));
+        energy_B=sum(sum(image2_Block_DCT.^2));
+        energy_A_Low=sum(sum(image1SubDct_LOW.^2));
+        energy_B_Low=sum(sum(image2SubDct_LOW.^2));
         
         corr_eng_1=energy_A*(1-cor1)*energy_A_Low;
         corr_eng_2=energy_B*(1-cor2)*energy_B_Low;
@@ -660,24 +660,24 @@ for i = 1:floor(m/8)
 
 
         if z>=zz
-           dctBlok = resim1_Blok_DCT;
+           dctBlock = image1_Block_DCT;
             Map(i,j) = -1;	% CV
 
         end
         if z<zz
-            dctBlok = resim2_Blok_DCT;
+            dctBlock = image2_Block_DCT;
             Map(i,j) = +1;    % CV
 
 
 
         end
         if z<zz+threshold1 && z>zz-threshold1
-            dctBlok = (resim2_Blok_DCT+resim2_Blok_DCT)./2;
+            dctBlock = (image2_Block_DCT+image2_Block_DCT)./2;
             Map(i,j) =0 ;
         end
         
         % Inverse  DCT
-        FusedDCT(8*i-7:8*i,8*j-7:8*j) = C'*dctBlok*C;	% DCT+Corr_Eng method
+        FusedDCT(8*i-7:8*i,8*j-7:8*j) = C'*dctBlock*C;	% DCT+Corr_Eng method
        
     end
 end
@@ -687,8 +687,8 @@ end
 threshold2=0.00;
 
 % Inverse level shifting 
-resim1 = uint8(double(resim1)+128);
-resim2 = uint8(double(resim2)+128);
+image1 = uint8(double(image1)+128);
+image2 = uint8(double(image2)+128);
 
 FusedDCT = uint8(double(FusedDCT)+128);
 
@@ -699,19 +699,19 @@ figure, imshow(FusedDCT), title('"DCT+Corr_Eng"');
 
 case 'DCT+CORR_ENG+CV'
     
-    global resim1
-    global resim2
+    global image1
+    global image2
     uiwait(msgbox('This process may take some time, please do not close this window.','Warning','modal')); 
 
 
-[m,n] = size(resim1);
+[m,n] = size(image1);
 FusedDCT = zeros(m,n);
 FusedDCT_CV = zeros(m,n);
 Map = zeros(floor(m/8),floor(n/8));	
 
 
-resim1 = double(resim1)-128;
-resim2 = double(resim2)-128;
+image1 = double(image1)-128;
+image2 = double(image2)-128;
 
 x=0.0751;
 y=0.1238;
@@ -795,28 +795,28 @@ threshold1=0;
 for i = 1:floor(m/8)
     for j = 1:floor(n/8)
         
-        resim1_Blok  = resim1(8*i-7:8*i,8*j-7:8*j);
-        resim2_Blok  = resim2(8*i-7:8*i,8*j-7:8*j);
+        image1_Block  = image1(8*i-7:8*i,8*j-7:8*j);
+        image2_Block  = image2(8*i-7:8*i,8*j-7:8*j);
         
-        % Compute the 2-D DCT of 8*8 Bloks
-        resim1_Blok_DCT = C*resim1_Blok*C';
-        resim2_Blok_DCT = C*resim2_Blok*C';
+        % Compute the 2-D DCT of 8*8 Blocks
+        image1_Block_DCT = C*image1_Block*C';
+        image2_Block_DCT = C*image2_Block*C';
         
-        resim1SubDct_LOW=(LU*resim1_Blok_DCT*T)+(resim1_Blok_DCT*S)+((Q*resim1_Blok_DCT*U)+(V*resim1_Blok_DCT*Q)+(Q*resim1_Blok_DCT*V));
-        resim2SubDct_LOW=(LU*resim2_Blok_DCT*T)+(resim2_Blok_DCT*S)+((Q*resim2_Blok_DCT*U)+(V*resim2_Blok_DCT*Q)+(Q*resim2_Blok_DCT*V));
+        image1SubDct_LOW=(LU*image1_Block_DCT*T)+(image1_Block_DCT*S)+((Q*image1_Block_DCT*U)+(V*image1_Block_DCT*Q)+(Q*image1_Block_DCT*V));
+        image2SubDct_LOW=(LU*image2_Block_DCT*T)+(image2_Block_DCT*S)+((Q*image2_Block_DCT*U)+(V*image2_Block_DCT*Q)+(Q*image2_Block_DCT*V));
 
-        PimA=resim1_Blok_DCT-mean2(resim1_Blok_DCT);
-        PimB=resim2_Blok_DCT-mean2(resim2_Blok_DCT);
-        PimA_Low=resim1SubDct_LOW-mean2(resim1SubDct_LOW);
-        PimB_Low=resim2SubDct_LOW-mean2(resim2SubDct_LOW);
+        PimA=image1_Block_DCT-mean2(image1_Block_DCT);
+        PimB=image2_Block_DCT-mean2(image2_Block_DCT);
+        PimA_Low=image1SubDct_LOW-mean2(image1SubDct_LOW);
+        PimB_Low=image2SubDct_LOW-mean2(image2SubDct_LOW);
         
         cor1= sum(sum(PimA.*PimA_Low))/sqrt(sum(sum(PimA.*PimA))*sum(sum(PimA_Low.*PimA_Low)));
         cor2= sum(sum(PimB.*PimB_Low))/sqrt(sum(sum(PimB.*PimB))*sum(sum(PimB_Low.*PimB_Low)));
        
-        energy_A=sum(sum(resim1_Blok_DCT.^2));
-        energy_B=sum(sum(resim2_Blok_DCT.^2));
-        energy_A_Low=sum(sum(resim1SubDct_LOW.^2));
-        energy_B_Low=sum(sum(resim2SubDct_LOW.^2));
+        energy_A=sum(sum(image1_Block_DCT.^2));
+        energy_B=sum(sum(image2_Block_DCT.^2));
+        energy_A_Low=sum(sum(image1SubDct_LOW.^2));
+        energy_B_Low=sum(sum(image2SubDct_LOW.^2));
         
         corr_eng_1=energy_A*(1-cor1)*energy_A_Low;
         corr_eng_2=energy_B*(1-cor2)*energy_B_Low;
@@ -827,24 +827,24 @@ for i = 1:floor(m/8)
 
 
         if z>=zz
-           dctBlok = resim1_Blok_DCT;
+           dctBlock = image1_Block_DCT;
             Map(i,j) = -1;	% CV
 
         end
         if z<zz
-            dctBlok = resim2_Blok_DCT;
+            dctBlock = image2_Block_DCT;
             Map(i,j) = +1;    % CV
 
 
 
         end
         if z<zz+threshold1 && z>zz-threshold1
-            dctBlok = (resim2_Blok_DCT+resim2_Blok_DCT)./2;
+            dctBlock = (image2_Block_DCT+image2_Block_DCT)./2;
             Map(i,j) =0 ;
         end
         
         % Inverse  DCT
-        FusedDCT(8*i-7:8*i,8*j-7:8*j) = C'*dctBlok*C;	% DCT+Corr_Eng method
+        FusedDCT(8*i-7:8*i,8*j-7:8*j) = C'*dctBlock*C;	% DCT+Corr_Eng method
        
     end
 end
@@ -858,22 +858,22 @@ for i = 1:m/8
     for j = 1:n/8
         % DCT+Variance+CV method
         if Map_Filtered(i,j) <= -threshold2
-            FusedDCT_CV(8*i-7:8*i,8*j-7:8*j) = resim1(8*i-7:8*i,8*j-7:8*j);
+            FusedDCT_CV(8*i-7:8*i,8*j-7:8*j) = image1(8*i-7:8*i,8*j-7:8*j);
    
         end
         if Map_Filtered(i,j) > threshold2
-            FusedDCT_CV(8*i-7:8*i,8*j-7:8*j) = resim2(8*i-7:8*i,8*j-7:8*j);
+            FusedDCT_CV(8*i-7:8*i,8*j-7:8*j) = image2(8*i-7:8*i,8*j-7:8*j);
       
         end
         if Map_Filtered(i,j) > -threshold2 &&  Map_Filtered(i,j) < threshold2
-             FusedDCT_CV(8*i-7:8*i,8*j-7:8*j) = (resim1(8*i-7:8*i,8*j-7:8*j)+resim2(8*i-7:8*i,8*j-7:8*j))./2;
+             FusedDCT_CV(8*i-7:8*i,8*j-7:8*j) = (image1(8*i-7:8*i,8*j-7:8*j)+image2(8*i-7:8*i,8*j-7:8*j))./2;
         end
         end
 end
 
 % Inverse level shifting 
-resim1 = uint8(double(resim1)+128);
-resim2 = uint8(double(resim2)+128);
+image1 = uint8(double(image1)+128);
+image2 = uint8(double(image2)+128);
 
 FusedDCT_CV = uint8(double(FusedDCT_CV)+128);
 
@@ -885,9 +885,9 @@ figure, imshow(FusedDCT_CV), title('"DCT+Corr_Eng+CV"');
         
 uiwait(msgbox('This process may take some time, please do not close this window.','Warning','modal')); 
 %**************************************************
-global resim1
-global resim2
-[m,n] = size(resim1);
+global image1
+global image2
+[m,n] = size(image1);
 FusedDCT = zeros(m,n);
 FusedDCT_CV = zeros(m,n);
 Map = zeros(floor(m/8),floor(n/8));	
@@ -895,44 +895,44 @@ Map = zeros(floor(m/8),floor(n/8));
 
 % Level shifting
 %**************************************************
-resim1 = double(resim1)-128;
-resim2 = double(resim2)-128;
+image1 = double(image1)-128;
+image2 = double(image2)-128;
 %**************************************************
 
 % 8*8 
 for i = 1:floor(m/8)
     for j = 1:floor(n/8)
         
-        resim1_Blok = resim1(8*i-7:8*i,8*j-7:8*j);
-        resim2_Blok = resim2(8*i-7:8*i,8*j-7:8*j);
+        image1_Block = image1(8*i-7:8*i,8*j-7:8*j);
+        image2_Block = image2(8*i-7:8*i,8*j-7:8*j);
         %  DCT 
-        resim1_Blok_DCT = dct2(resim1_Blok);
-        resim2_Blok_DCT = dct2(resim2_Blok);
-        sigma1=svd(resim1_Blok_DCT);
-        sigma2=svd(resim2_Blok_DCT);
+        image1_Block_DCT = dct2(image1_Block);
+        image2_Block_DCT = dct2(image2_Block);
+        sigma1=svd(image1_Block_DCT);
+        sigma2=svd(image2_Block_DCT);
         
         x1=sigma1(1)*sigma1(2)*sigma1(3)*sigma1(4)*sigma1(5);
         x2=sigma2(1)*sigma2(2)*sigma2(3)*sigma2(4)*sigma2(5);
         
          % Fusion 
         if x1 > x2
-            dctBlok = resim1_Blok_DCT;
+            dctBlock = image1_Block_DCT;
              
         else
-            dctBlok = resim2_Blok_DCT;
+            dctBlock = image2_Block_DCT;
              
         end
         
-        % Compute the 2-D inverse DCT of 8*8 Bloks and construct fused image
+        % Compute the 2-D inverse DCT of 8*8 Blocks and construct fused image
         % DCT+SVD Method
-        FusedDCT(8*i-7:8*i,8*j-7:8*j) = idct2(dctBlok);
+        FusedDCT(8*i-7:8*i,8*j-7:8*j) = idct2(dctBlock);
         
     end
 end
 % inverse shifting 
 %**************************************************
-resim1 = uint8(double(resim1)+128);
-resim2 = uint8(double(resim2)+128);
+image1 = uint8(double(image1)+128);
+image2 = uint8(double(image2)+128);
 FusedDCT = uint8(double(FusedDCT)+128);
 %**************************************************
 
@@ -943,14 +943,14 @@ figure, imshow(FusedDCT), title('"DCT+SVD" fusion result');
 
 %DCT+SVD+CV    
     case 'DCT+SVD+CV'
-%uyarý
-uiwait(msgbox('Bu iþlem biraz zaman alabilir.','Uyarý!','modal')); 
+%uyarï¿½
+uiwait(msgbox('Bu iï¿½lem biraz zaman alabilir.','Uyarï¿½!','modal')); 
         
 %**************************************************
-global resim1
-global resim2
+global image1
+global image2
         
-[m,n] = size(resim1);
+[m,n] = size(image1);
 FusedDCT = zeros(m,n);
 FusedDCT_CV = zeros(m,n);
 Map = zeros(floor(m/8),floor(n/8));	
@@ -958,37 +958,37 @@ Map = zeros(floor(m/8),floor(n/8));
 
 % Level shifting
 %**************************************************
-resim1 = double(resim1)-128;
-resim2 = double(resim2)-128;
+image1 = double(image1)-128;
+image2 = double(image2)-128;
 %**************************************************
 
 % 8*8 
 for i = 1:floor(m/8)
     for j = 1:floor(n/8)
         
-        resim1_Blok = resim1(8*i-7:8*i,8*j-7:8*j);
-        resim2_Blok = resim2(8*i-7:8*i,8*j-7:8*j);
+        image1_Block = image1(8*i-7:8*i,8*j-7:8*j);
+        image2_Block = image2(8*i-7:8*i,8*j-7:8*j);
         %  DCT  
-        resim1_Blok_DCT = dct2(resim1_Blok);
-        resim2_Blok_DCT = dct2(resim2_Blok);
-        sigma1=svd(resim1_Blok_DCT);
-        sigma2=svd(resim2_Blok_DCT);
+        image1_Block_DCT = dct2(image1_Block);
+        image2_Block_DCT = dct2(image2_Block);
+        sigma1=svd(image1_Block_DCT);
+        sigma2=svd(image2_Block_DCT);
         
         x1=sigma1(1)*sigma1(2)*sigma1(3)*sigma1(4)*sigma1(5);
         x2=sigma2(1)*sigma2(2)*sigma2(3)*sigma2(4)*sigma2(5);
         
          % Fusion
         if x1 > x2
-            dctBlok = resim1_Blok_DCT;
+            dctBlock = image1_Block_DCT;
             Map(i,j) =+1;	% CV
         else
-            dctBlok = resim2_Blok_DCT;
+            dctBlock = image2_Block_DCT;
             Map(i,j) = -1;    % CV 
         end
         
         % Inverse DCT 
         % DCT+SVD Method
-        FusedDCT(8*i-7:8*i,8*j-7:8*j) = idct2(dctBlok);
+        FusedDCT(8*i-7:8*i,8*j-7:8*j) = idct2(dctBlock);
         
     end
 end
@@ -1006,9 +1006,9 @@ for i = 1:m/8
     for j = 1:n/8
         
         if Map_Filtered(i,j) > 0
-            FusedDCT_CV(8*i-7:8*i,8*j-7:8*j) = resim1(8*i-7:8*i,8*j-7:8*j);
+            FusedDCT_CV(8*i-7:8*i,8*j-7:8*j) = image1(8*i-7:8*i,8*j-7:8*j);
         else
-            FusedDCT_CV(8*i-7:8*i,8*j-7:8*j) = resim2(8*i-7:8*i,8*j-7:8*j);
+            FusedDCT_CV(8*i-7:8*i,8*j-7:8*j) = image2(8*i-7:8*i,8*j-7:8*j);
         end
         
     end
@@ -1018,8 +1018,8 @@ end
 
 % inverse shifting 
 %**************************************************
-resim1 = uint8(double(resim1)+128);
-resim2 = uint8(double(resim2)+128);
+image1 = uint8(double(image1)+128);
+image2 = uint8(double(image2)+128);
 %**************************************************
 
 FusedDCT_CV = uint8(double(FusedDCT_CV)+128);
